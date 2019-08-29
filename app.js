@@ -1,17 +1,21 @@
-import React, {Component} from 'react';
-import {render} from 'react-dom';
-import {StaticMap} from 'react-map-gl';
-import {PhongMaterial} from '@luma.gl/core';
-import {AmbientLight, PointLight, LightingEffect} from '@deck.gl/core';
-import {HexagonLayer} from '@deck.gl/aggregation-layers';
+import React, { Component } from 'react';
+import { render } from 'react-dom';
+import { StaticMap } from 'react-map-gl';
+import { PhongMaterial } from '@luma.gl/core';
+import { AmbientLight, PointLight, LightingEffect } from '@deck.gl/core';
+import { HexagonLayer } from '@deck.gl/aggregation-layers';
 import DeckGL from '@deck.gl/react';
 
 // Set your mapbox token here
-const MAPBOX_TOKEN = process.env.MapboxAccessToken; // eslint-disable-line
+const MAPBOX_TOKEN = "pk.eyJ1IjoiYmhpc29uIiwiYSI6ImNqcDc5a2xlaTEwNmwza28zMDFvYWl1YnkifQ.9KB2DoGG7y7QBd93uBbWFw";
 
 // Source data CSV
 const DATA_URL =
   'https://raw.githubusercontent.com/uber-common/deck.gl-data/master/examples/3d-heatmap/heatmap-data.csv'; // eslint-disable-line
+
+// My data source
+const TIM_DATA_URL =
+  "https://roadtraffic.dft.gov.uk/api/average-annual-daily-flow-by-direction?filter[local_authority_id]=71";
 
 const ambientLight = new AmbientLight({
   color: [255, 255, 255],
@@ -30,7 +34,7 @@ const pointLight2 = new PointLight({
   position: [-3.807751, 54.104682, 8000]
 });
 
-const lightingEffect = new LightingEffect({ambientLight, pointLight1, pointLight2});
+const lightingEffect = new LightingEffect({ ambientLight, pointLight1, pointLight2 });
 
 const material = new PhongMaterial({
   ambient: 0.64,
@@ -40,9 +44,9 @@ const material = new PhongMaterial({
 });
 
 const INITIAL_VIEW_STATE = {
-  longitude: -1.4157267858730052,
-  latitude: 52.232395363869415,
-  zoom: 6.6,
+  longitude: -3.5485668,
+  latitude: 50.7244773,
+  zoom: 8,
   minZoom: 5,
   maxZoom: 15,
   pitch: 40.5,
@@ -58,7 +62,7 @@ const colorRange = [
   [209, 55, 78]
 ];
 
-const elevationScale = {min: 1, max: 50};
+const elevationScale = { min: 1, max: 50 };
 
 /* eslint-disable react/no-deprecated */
 export class App extends Component {
@@ -74,7 +78,7 @@ export class App extends Component {
   }
 
   _renderLayers() {
-    const {data, radius = 1000, upperPercentile = 100, coverage = 1} = this.props;
+    const { data, radius = 1000, upperPercentile = 100, coverage = 1 } = this.props;
 
     return [
       new HexagonLayer({
@@ -101,7 +105,7 @@ export class App extends Component {
   }
 
   render() {
-    const {mapStyle = 'mapbox://styles/mapbox/dark-v9'} = this.props;
+    const { mapStyle = 'mapbox://styles/mapbox/dark-v9' } = this.props;
 
     return (
       <DeckGL
@@ -124,10 +128,29 @@ export class App extends Component {
 export function renderToDOM(container) {
   render(<App />, container);
 
-  require('d3-request').csv(DATA_URL, (error, response) => {
-    if (!error) {
-      const data = response.map(d => [Number(d.lng), Number(d.lat)]);
-      render(<App data={data} />, container);
-    }
-  });
+  // data from:'https://roadtraffic.dft.gov.uk/api/average-annual-daily-flow-by-direction?filter[local_authority_id]=71'
+  const response = require('./data.json');
+
+  const data =
+    response.data.map(d =>
+      [Number(d.longitude), Number(d.latitude)]
+        //   {
+        // latitude: d.latitude;
+        // longitude: d.longitude;
+        // roadType: d.road_type;
+        // roadName: d.road_name;
+        // startJunction: d.start_junction_road_name;
+        // endJunction: d.end_junction_road_name;
+        // counts: {
+        //   pushbikes: d.pedal_cycles;
+        //   motorbikes: d.two_wheeled_motor_vehicles;
+        //   cars: d.cars_and_taxis;
+        //   buses: d.buses_and_coaches;
+        //   lgvs: d.lgvs;
+        //   hgvs: d.all_hgvs;
+        //   alllMotorVehicles: d.all_motor_vehicles;
+        // }
+      // }
+    );
+  render(<App data={data} />, container);
 }
